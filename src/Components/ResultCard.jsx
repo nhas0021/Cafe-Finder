@@ -3,7 +3,7 @@ function ResultCard({ cafe }) {
     <article className="result-card">
       <div className="result-card-info">
         {/* later: location icon */}
-        <h3 className="result-card-title">{cafe.name}</h3>
+        <img src="src/assets/pin.png" className="pin"></img><h3 className="result-card-title">{cafe.name}</h3>
         <p className="result-card-text">{cafe.description}</p>
       </div>
 
