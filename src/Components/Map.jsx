@@ -1,16 +1,90 @@
-function Map() {
+// src/Components/Map.jsx
+import { useState, useEffect } from "react";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+
+const fallbackCenter = {
+  lat: -37.8136, // Melbourne fallback
+  lng: 144.9631,
+};
+
+function Map({ onCafesChange }) {
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
+  });
+
+  const [center, setCenter] = useState(fallbackCenter);
+  const [map, setMap] = useState(null);
+  const [cafes, setCafes] = useState([]);
+
+  // Get user location
+  useEffect(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        setCenter({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      () => {
+        // user denied → stay at fallback
+      }
+    );
+  }, []);
+
+  // Search nearby cafes when map + center ready
+  useEffect(() => {
+    if (!map) return;
+
+    const service = new window.google.maps.places.PlacesService(map);
+
+    service.nearbySearch(
+      {
+        location: center,
+        radius: 1500,
+        type: "cafe",
+      },
+      (results, status) => {
+        if (
+          status !== window.google.maps.places.PlacesServiceStatus.OK ||
+          !results
+        )
+          return;
+
+        const simplified = results.map((place) => ({
+          id: place.place_id,
+          name: place.name,
+          location: {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          },
+        }));
+
+        setCafes(simplified);
+        onCafesChange?.(simplified);
+      }
+    );
+  }, [map, center, onCafesChange]);
+
+  if (!isLoaded) return null;
+
   return (
     <section className="map-section">
       <div className="map-box">
-        <img src="src/assets/map.png" className="map-icon"></img>
-        <iframe
-          title="Cafe map"
-          src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d88715.20999528133!2d145.0155723653939!3d-37.83991794602396!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1smelbourne%20cafes!5e0!3m2!1sen!2skw!4v1764832528340!5m2!1sen!2skw" 
-          className="map"
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
-        ></iframe>
+        <GoogleMap
+          center={center}
+          zoom={14}
+          mapContainerClassName="map"
+          onLoad={(mapInstance) => setMap(mapInstance)}
+        >
+          {/* user marker */}
+          <Marker position={center} />
+
+          {/* cafe markers */}
+          {cafes.map((cafe) => (
+            <Marker key={cafe.id} position={cafe.location} />
+          ))}
+        </GoogleMap>
       </div>
     </section>
   );
