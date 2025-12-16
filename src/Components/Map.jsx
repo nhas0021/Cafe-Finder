@@ -85,9 +85,21 @@ function Map({ onCafesChange }) {
           zoom={14}
           mapContainerClassName="map"
           onLoad={(mapInstance) => setMap(mapInstance)}
+          onClick={(e) => {
+            // e.latLng is a Google LatLng object
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+
+            // Move the search center to where user clicked
+            setCenter({ lat, lng });
+
+            // Optional: pan smoothly to clicked point
+            map?.panTo({ lat, lng });
+          }
+          }
         >
           {/* user marker */}
-          <Marker position={center} />
+          <Marker position={center} icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"/>
 
           {/* cafe markers */}
           {cafes.map((cafe) => (
