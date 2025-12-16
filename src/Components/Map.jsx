@@ -51,14 +51,23 @@ function Map({ onCafesChange }) {
         )
           return;
 
-        const simplified = results.map((place) => ({
-          id: place.place_id,
-          name: place.name,
-          location: {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          },
-        }));
+        const simplified = results.map((place) => {
+          const photoRef = place.photos?.[0]?.photo_reference;
+
+          return {
+            id: place.place_id,
+            name: place.name,
+            address: place.vicinity,
+            photoUrl: photoRef
+              ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+              : null,
+            location: {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            },
+          };
+        });
+
 
         setCafes(simplified);
         onCafesChange?.(simplified);
